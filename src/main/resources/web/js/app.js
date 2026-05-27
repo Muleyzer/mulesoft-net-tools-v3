@@ -14,6 +14,8 @@ document.addEventListener("DOMContentLoaded", function() {
     var dnsServerInput = document.getElementById("dnsServer");
     var urlInput = document.getElementById("url");
     var insecureInput = document.getElementById("insecure");
+    var queryParamsList = document.getElementById("queryParamsList");
+    var addQueryParamButton = document.getElementById("addQueryParam");
     var headersList = document.getElementById("headersList");
     var addHeaderButton = document.getElementById("addHeader");
     var contentTypeInput = document.getElementById("contentType");
@@ -49,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function() {
             operation: "curl",
             label: "curl",
             help: "Set a URL, optional headers, TLS behavior, and HTTP method, then hit Run.",
-            fields: ["method", "url", "headers", "insecure"]
+            fields: ["method", "url", "queryParams", "headers", "insecure"]
         },
         {
             operation: "certest",
@@ -67,6 +69,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     var toolByOperation = {};
     var currentTool = tools[0];
+    var syncingUrl = false;
+    var syncingQueryParams = false;
 
     function clearNotification() {
         notifications.replaceChildren();
@@ -101,6 +105,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.querySelector(".field-dns").classList.toggle("hidden", !hasField(tool, "dns"));
         document.querySelector(".field-method").classList.toggle("hidden", !hasField(tool, "method"));
         document.querySelector(".field-url").classList.toggle("hidden", !hasField(tool, "url"));
+        document.querySelector(".field-query-params").classList.toggle("hidden", !hasField(tool, "queryParams"));
         document.querySelector(".field-headers").classList.toggle("hidden", !hasField(tool, "headers"));
         document.querySelector(".field-insecure").classList.toggle("hidden", !hasField(tool, "insecure"));
         updateBodyVisibility();
@@ -158,13 +163,153 @@ document.addEventListener("DOMContentLoaded", function() {
         return true;
     }
 
+    function splitUrl(value) {
+        var url = value || "";
+        var hashIndex = url.indexOf("#");
+        var hash = "";
+        var beforeHash = url;
+        var queryIndex;
+
+        if (hashIndex >= 0) {
+            hash = url.slice(hashIndex);
+            beforeHash = url.slice(0, hashIndex);
+        }
+
+        queryIndex = beforeHash.indexOf("?");
+        if (queryIndex < 0) {
+            return {
+                base: beforeHash,
+                query: "",
+                hash: hash
+            };
+        }
+
+        return {
+            base: beforeHash.slice(0, queryIndex),
+            query: beforeHash.slice(queryIndex + 1),
+            hash: hash
+        };
+    }
+
+    function ensureQueryParamPlaceholder() {
+        if (!queryParamsList.children.length) {
+            addQueryParamRow("", "", true, true);
+        }
+    }
+
+    function collectQueryParams() {
+        var params = [];
+
+        queryParamsList.querySelectorAll(".curl-pair-row").forEach(function(row) {
+            var enabledInput = row.querySelector('input[type="checkbox"]');
+            var name = row.querySelector(".query-param-name").value.trim();
+            var value = row.querySelector(".query-param-value").value.trim();
+
+            if (!enabledInput.checked || !name || !value) {
+                return;
+            }
+
+            params.push({
+                name: name,
+                value: value
+            });
+        });
+
+        return params;
+    }
+
+    function syncUrlFromQueryParams() {
+        var urlParts;
+        var searchParams;
+        var queryString;
+
+        if (syncingQueryParams) {
+            return;
+        }
+
+        syncingUrl = true;
+        urlParts = splitUrl(urlInput.value);
+        searchParams = new URLSearchParams();
+        collectQueryParams().forEach(function(param) {
+            searchParams.append(param.name, param.value);
+        });
+        queryString = searchParams.toString();
+        urlInput.value = urlParts.base + (queryString ? "?" + queryString : "") + urlParts.hash;
+        syncingUrl = false;
+    }
+
+    function syncQueryParamsFromUrl() {
+        var urlParts;
+        var searchParams;
+        var hasParams = false;
+
+        if (syncingUrl) {
+            return;
+        }
+
+        syncingQueryParams = true;
+        urlParts = splitUrl(urlInput.value);
+        searchParams = new URLSearchParams(urlParts.query);
+        queryParamsList.replaceChildren();
+        searchParams.forEach(function(value, name) {
+            if (!name || !value) {
+                return;
+            }
+            hasParams = true;
+            addQueryParamRow(name, value, true, true);
+        });
+        if (!hasParams) {
+            addQueryParamRow("", "", true, true);
+        }
+        syncingQueryParams = false;
+    }
+
+    function addQueryParamRow(name, value, enabled, skipSync) {
+        var row = document.createElement("div");
+        var enabledInput = document.createElement("input");
+        var nameInput = document.createElement("input");
+        var valueInput = document.createElement("input");
+        var removeButton = document.createElement("button");
+
+        row.className = "curl-pair-row";
+        enabledInput.type = "checkbox";
+        enabledInput.checked = enabled !== false;
+        enabledInput.title = "Enable query parameter";
+        nameInput.type = "text";
+        nameInput.placeholder = "Name";
+        nameInput.value = name || "";
+        nameInput.className = "query-param-name";
+        valueInput.type = "text";
+        valueInput.placeholder = "Value";
+        valueInput.value = value || "";
+        valueInput.className = "query-param-value";
+        removeButton.type = "button";
+        removeButton.className = "icon-button";
+        removeButton.textContent = "X";
+        removeButton.title = "Remove query parameter";
+        removeButton.addEventListener("click", function() {
+            row.remove();
+            ensureQueryParamPlaceholder();
+            syncUrlFromQueryParams();
+        });
+        enabledInput.addEventListener("change", syncUrlFromQueryParams);
+        nameInput.addEventListener("input", syncUrlFromQueryParams);
+        valueInput.addEventListener("input", syncUrlFromQueryParams);
+        row.append(enabledInput, nameInput, valueInput, removeButton);
+        queryParamsList.append(row);
+
+        if (!skipSync) {
+            syncUrlFromQueryParams();
+        }
+    }
+
     function addHeaderRow(name, value, enabled, managedContentType) {
         var row = document.createElement("div");
         var enabledInput = document.createElement("input");
         var nameInput = document.createElement("input");
         var valueInput = document.createElement("input");
 
-        row.className = "curl-header-row";
+        row.className = "curl-pair-row curl-header-row";
         if (managedContentType) {
             row.classList.add("is-managed");
             row.dataset.managedHeader = "content-type";
@@ -415,6 +560,14 @@ document.addEventListener("DOMContentLoaded", function() {
         addHeaderRow("", "", true);
     });
 
+    addQueryParamButton.addEventListener("click", function() {
+        addQueryParamRow("", "", true);
+    });
+
+    urlInput.addEventListener("input", function() {
+        syncQueryParamsFromUrl();
+    });
+
     formatBodyButton.addEventListener("click", function() {
         formatBody();
     });
@@ -471,6 +624,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     addHeaderRow("", "", true);
+    addQueryParamRow("", "", true, true);
     selectTool("ping");
     updateConsoleMaxHeight();
 });

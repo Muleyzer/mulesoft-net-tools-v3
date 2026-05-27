@@ -52,6 +52,12 @@
                                     <input name="url" placeholder="http://host:port/path/" type="text" title="URL" id="url" />
                                 </div>
 
+                                <div class="field field-query-params full-width">
+                                    <label>Query Parameters</label>
+                                    <div class="curl-pairs" id="queryParamsList"></div>
+                                    <button type="button" class="secondary-action" id="addQueryParam">Add Query Parameter</button>
+                                </div>
+
                                 <div class="check-field field-insecure full-width">
                                     <input name="insecure" type="checkbox" title="insecure" id="insecure" />
                                     <label for="insecure">Allow insecure TLS</label>
@@ -59,7 +65,7 @@
 
                                 <div class="field field-headers full-width">
                                     <label>Headers</label>
-                                    <div class="curl-headers" id="headersList"></div>
+                                    <div class="curl-pairs" id="headersList"></div>
                                     <button type="button" class="secondary-action" id="addHeader">Add Header</button>
                                 </div>
 
