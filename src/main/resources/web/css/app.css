@@ -177,6 +177,29 @@ textarea {
     text-transform: uppercase;
 }
 
+.field-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.mode-toggle {
+    min-height: 26px;
+    padding: 3px 8px;
+    border: 1px solid #a8b4bf;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #334e68;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.mode-toggle:hover {
+    background: #f3f6f8;
+}
+
 .field input,
 .field select,
 .field textarea {
@@ -195,6 +218,10 @@ textarea {
     font-family: Consolas, "Courier New", monospace;
     font-size: 0.9rem;
     line-height: 1.35;
+}
+
+.field textarea.bulk-input {
+    min-height: 94px;
 }
 
 .field input:focus,

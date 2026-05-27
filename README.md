@@ -4,7 +4,7 @@ The Net Tools API is a deployable Mule app that you can deploy to CloudHub or an
 
 ## v3 Highlights
 
-This version refreshes the web UI with tab-based tool selection, clearer input forms, console-style output, and expanded curl controls for GET/POST requests, query parameters, headers, insecure TLS, and request bodies. It also removes the previous jQuery and Toastr dependencies in favor of plain JavaScript and CSS.
+This version refreshes the web UI with tab-based tool selection, clearer input forms, console-style output, and expanded curl controls for GET/POST requests, query parameters, headers, insecure TLS, and request bodies. Query parameters and headers can be entered row by row or in bulk text mode. It also removes the previous jQuery and Toastr dependencies in favor of plain JavaScript and CSS.
 
 This version also consolidates the application into a single counted Mule flow, reducing the number of license-counted flows from more than 10 to 1 to align with the updated pricing model.
 
@@ -16,7 +16,7 @@ This app uses a single configurable HTTP listener port. HTTPS termination is exp
 - Ping
 - TraceRoute
 - Opening a TCP socket
-- curl GET and POST requests with optional query parameters and headers
+- curl GET and POST requests with optional query parameters and headers, including bulk entry
 - Optional insecure TLS for curl requests
 - Pull SSL certificates
 - Check supported ciphers for a given SSL/TLS endpoint

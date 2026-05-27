@@ -53,20 +53,28 @@
                                 </div>
 
                                 <div class="field field-query-params full-width">
-                                    <label>Query Parameters</label>
+                                    <div class="field-heading">
+                                        <label>Query Parameters</label>
+                                        <button type="button" class="mode-toggle" id="queryParamsModeToggle">Bulk</button>
+                                    </div>
                                     <div class="curl-pairs" id="queryParamsList"></div>
+                                    <textarea class="bulk-input hidden" id="queryParamsBulk" rows="4" placeholder="a=1&#10;b=2"></textarea>
                                     <button type="button" class="secondary-action" id="addQueryParam">Add Query Parameter</button>
+                                </div>
+
+                                <div class="field field-headers full-width">
+                                    <div class="field-heading">
+                                        <label>Headers</label>
+                                        <button type="button" class="mode-toggle" id="headersModeToggle">Bulk</button>
+                                    </div>
+                                    <div class="curl-pairs" id="headersList"></div>
+                                    <textarea class="bulk-input hidden" id="headersBulk" rows="4" placeholder="Authorization: Bearer token&#10;Accept: application/json"></textarea>
+                                    <button type="button" class="secondary-action" id="addHeader">Add Header</button>
                                 </div>
 
                                 <div class="check-field field-insecure full-width">
                                     <input name="insecure" type="checkbox" title="insecure" id="insecure" />
                                     <label for="insecure">Allow insecure TLS</label>
-                                </div>
-
-                                <div class="field field-headers full-width">
-                                    <label>Headers</label>
-                                    <div class="curl-pairs" id="headersList"></div>
-                                    <button type="button" class="secondary-action" id="addHeader">Add Header</button>
                                 </div>
 
                                 <div class="field field-body full-width">

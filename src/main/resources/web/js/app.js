@@ -15,8 +15,12 @@ document.addEventListener("DOMContentLoaded", function() {
     var urlInput = document.getElementById("url");
     var insecureInput = document.getElementById("insecure");
     var queryParamsList = document.getElementById("queryParamsList");
+    var queryParamsBulk = document.getElementById("queryParamsBulk");
+    var queryParamsModeToggle = document.getElementById("queryParamsModeToggle");
     var addQueryParamButton = document.getElementById("addQueryParam");
     var headersList = document.getElementById("headersList");
+    var headersBulk = document.getElementById("headersBulk");
+    var headersModeToggle = document.getElementById("headersModeToggle");
     var addHeaderButton = document.getElementById("addHeader");
     var contentTypeInput = document.getElementById("contentType");
     var formatBodyButton = document.getElementById("formatBody");
@@ -71,6 +75,8 @@ document.addEventListener("DOMContentLoaded", function() {
     var currentTool = tools[0];
     var syncingUrl = false;
     var syncingQueryParams = false;
+    var queryParamsMode = "rows";
+    var headersMode = "rows";
 
     function clearNotification() {
         notifications.replaceChildren();
@@ -197,7 +203,46 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    function collectQueryParams() {
+    function parseBulkPairs(value, delimiter) {
+        var params = [];
+
+        (value || "").split(/\r?\n/).forEach(function(line) {
+            var index;
+            var name;
+            var pairValue;
+
+            line = line.trim();
+            if (!line) {
+                return;
+            }
+
+            index = line.indexOf(delimiter);
+            if (index < 0) {
+                return;
+            }
+
+            name = line.slice(0, index).trim();
+            pairValue = line.slice(index + delimiter.length).trim();
+            if (!name || !pairValue) {
+                return;
+            }
+
+            params.push({
+                name: name,
+                value: pairValue
+            });
+        });
+
+        return params;
+    }
+
+    function formatBulkPairs(params, delimiter) {
+        return params.map(function(param) {
+            return param.name + delimiter + param.value;
+        }).join("\n");
+    }
+
+    function collectQueryParamsFromRows() {
         var params = [];
 
         queryParamsList.querySelectorAll(".curl-pair-row").forEach(function(row) {
@@ -216,6 +261,31 @@ document.addEventListener("DOMContentLoaded", function() {
         });
 
         return params;
+    }
+
+    function collectQueryParams() {
+        if (queryParamsMode === "bulk") {
+            return parseBulkPairs(queryParamsBulk.value, "=");
+        }
+
+        return collectQueryParamsFromRows();
+    }
+
+    function replaceQueryParamRows(params) {
+        queryParamsList.replaceChildren();
+        params.forEach(function(param) {
+            addQueryParamRow(param.name, param.value, true, true);
+        });
+        ensureQueryParamPlaceholder();
+    }
+
+    function renderQueryParams(params) {
+        if (queryParamsMode === "bulk") {
+            queryParamsBulk.value = formatBulkPairs(params, "=");
+            return;
+        }
+
+        replaceQueryParamRows(params);
     }
 
     function syncUrlFromQueryParams() {
@@ -241,7 +311,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function syncQueryParamsFromUrl() {
         var urlParts;
         var searchParams;
-        var hasParams = false;
+        var params = [];
 
         if (syncingUrl) {
             return;
@@ -250,17 +320,16 @@ document.addEventListener("DOMContentLoaded", function() {
         syncingQueryParams = true;
         urlParts = splitUrl(urlInput.value);
         searchParams = new URLSearchParams(urlParts.query);
-        queryParamsList.replaceChildren();
         searchParams.forEach(function(value, name) {
             if (!name || !value) {
                 return;
             }
-            hasParams = true;
-            addQueryParamRow(name, value, true, true);
+            params.push({
+                name: name,
+                value: value
+            });
         });
-        if (!hasParams) {
-            addQueryParamRow("", "", true, true);
-        }
+        renderQueryParams(params);
         syncingQueryParams = false;
     }
 
@@ -348,6 +417,81 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
+    function collectHeaderPairsFromRows() {
+        var params = [];
+
+        headersList.querySelectorAll(".curl-header-row").forEach(function(row) {
+            var enabledInput = row.querySelector('input[type="checkbox"]');
+            var name = row.querySelector(".header-name").value.trim();
+            var value = row.querySelector(".header-value").value.trim();
+
+            if (row.dataset.managedHeader === "content-type") {
+                return;
+            }
+
+            if (!enabledInput.checked || !name || !value) {
+                return;
+            }
+
+            params.push({
+                name: name,
+                value: value
+            });
+        });
+
+        return params;
+    }
+
+    function collectHeaderPairs() {
+        if (headersMode === "bulk") {
+            return parseBulkPairs(headersBulk.value, ":");
+        }
+
+        return collectHeaderPairsFromRows();
+    }
+
+    function replaceHeaderRows(params) {
+        headersList.replaceChildren();
+        params.forEach(function(param) {
+            if (currentTool.operation === "curl" && methodInput.value === "POST" && param.name.toLowerCase() === "content-type") {
+                return;
+            }
+            addHeaderRow(param.name, param.value, true);
+        });
+        if (!headersList.children.length) {
+            addHeaderRow("", "", true);
+        }
+        syncContentTypeHeader();
+    }
+
+    function setQueryParamsMode(mode) {
+        var params = collectQueryParams();
+
+        queryParamsMode = mode;
+        queryParamsList.classList.toggle("hidden", mode !== "rows");
+        addQueryParamButton.classList.toggle("hidden", mode !== "rows");
+        queryParamsBulk.classList.toggle("hidden", mode !== "bulk");
+        queryParamsModeToggle.textContent = mode === "rows" ? "Bulk" : "Rows";
+        renderQueryParams(params);
+        syncUrlFromQueryParams();
+    }
+
+    function setHeadersMode(mode) {
+        var params = collectHeaderPairs();
+
+        headersMode = mode;
+        headersList.classList.toggle("hidden", mode !== "rows");
+        addHeaderButton.classList.toggle("hidden", mode !== "rows");
+        headersBulk.classList.toggle("hidden", mode !== "bulk");
+        headersModeToggle.textContent = mode === "rows" ? "Bulk" : "Rows";
+        if (mode === "bulk") {
+            headersBulk.value = formatBulkPairs(params, ": ");
+            return;
+        }
+
+        replaceHeaderRows(params);
+    }
+
     function syncContentTypeHeader() {
         var managedRow = headersList.querySelector('[data-managed-header="content-type"]');
         var shouldShow = currentTool.operation === "curl" && methodInput.value === "POST";
@@ -379,18 +523,14 @@ document.addEventListener("DOMContentLoaded", function() {
         var headers = [];
 
         if (includeContentType) {
-            syncContentTypeHeader();
+            headers.push("Content-Type:" + contentTypeInput.value);
         }
-        headersList.querySelectorAll(".curl-header-row").forEach(function(row) {
-            var enabledInput = row.querySelector('input[type="checkbox"]');
-            var name = row.querySelector(".header-name").value.trim();
-            var value = row.querySelector(".header-value").value.trim();
-
-            if (!enabledInput.checked || !name || !value) {
+        collectHeaderPairs().forEach(function(param) {
+            if (includeContentType && param.name.toLowerCase() === "content-type") {
                 return;
             }
 
-            headers.push(name + ":" + value);
+            headers.push(param.name + ":" + param.value);
         });
 
         return headers;
@@ -560,8 +700,26 @@ document.addEventListener("DOMContentLoaded", function() {
         addHeaderRow("", "", true);
     });
 
+    headersModeToggle.addEventListener("click", function() {
+        setHeadersMode(headersMode === "rows" ? "bulk" : "rows");
+    });
+
+    headersBulk.addEventListener("input", function() {
+        if (headersMode === "bulk") {
+            syncContentTypeHeader();
+        }
+    });
+
     addQueryParamButton.addEventListener("click", function() {
         addQueryParamRow("", "", true);
+    });
+
+    queryParamsModeToggle.addEventListener("click", function() {
+        setQueryParamsMode(queryParamsMode === "rows" ? "bulk" : "rows");
+    });
+
+    queryParamsBulk.addEventListener("input", function() {
+        syncUrlFromQueryParams();
     });
 
     urlInput.addEventListener("input", function() {
@@ -625,6 +783,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     addHeaderRow("", "", true);
     addQueryParamRow("", "", true, true);
+    setHeadersMode("bulk");
+    setQueryParamsMode("bulk");
     selectTool("ping");
     updateConsoleMaxHeight();
 });
