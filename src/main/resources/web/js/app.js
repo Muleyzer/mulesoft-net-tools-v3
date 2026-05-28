@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var methodInput = document.getElementById("method");
     var output = document.getElementById("output");
     var consolePanel = document.querySelector(".console-panel");
+    var wrapConsoleInput = document.getElementById("wrapConsole");
     var cleanButton = document.getElementById("clean");
     var checkButton = document.getElementById("check");
     var ipInput = document.getElementById("ip");
@@ -633,7 +634,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         command.className = "command";
-        command.textContent = "> " + operation + " " + ip + " " + port + " " + url;
+        command.textContent = "> " + [operation, ip, port, url].filter(Boolean).join(" ");
         output.append(command);
         updateConsoleMaxHeight();
         output.scrollTop = output.scrollHeight;
@@ -656,6 +657,10 @@ document.addEventListener("DOMContentLoaded", function() {
         emptyMessage.textContent = "No commands have been run.";
         output.replaceChildren(emptyMessage);
         updateConsoleMaxHeight();
+    }
+
+    function updateConsoleWrapMode() {
+        output.classList.toggle("no-wrap", !wrapConsoleInput.checked);
     }
 
     function updateConsoleMaxHeight() {
@@ -734,6 +739,10 @@ document.addEventListener("DOMContentLoaded", function() {
         resetConsole();
     });
 
+    wrapConsoleInput.addEventListener("change", function() {
+        updateConsoleWrapMode();
+    });
+
     window.addEventListener("resize", function() {
         updateConsoleMaxHeight();
     });
@@ -753,7 +762,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         var request = buildRequest(operation, ip, port, dnsServer, url);
 
-        console.log(operation + " " + ip + " " + port + " " + url);
+        console.log([operation, ip, port, url].filter(Boolean).join(" "));
         checkButton.disabled = true;
         appendCommand(operation, ip, port, url);
 
@@ -786,5 +795,6 @@ document.addEventListener("DOMContentLoaded", function() {
     setHeadersMode("bulk");
     setQueryParamsMode("bulk");
     selectTool("ping");
+    updateConsoleWrapMode();
     updateConsoleMaxHeight();
 });

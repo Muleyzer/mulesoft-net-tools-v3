@@ -139,6 +139,22 @@ textarea {
     font-weight: 700;
 }
 
+.console-wrap-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #334e68;
+    font-size: 0.82rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.console-wrap-toggle input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
 .tool-form {
     display: grid;
     gap: 10px;
@@ -352,13 +368,18 @@ textarea {
 .console {
     min-height: 420px;
     max-height: var(--console-max-height, 420px);
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: 10px;
     background: #101820;
     color: #d7e3ec;
     font-family: Consolas, "Courier New", monospace;
     font-size: 0.88rem;
     line-height: 1.45;
+}
+
+.console.no-wrap {
+    overflow-x: auto;
 }
 
 .console-empty {
@@ -369,13 +390,26 @@ textarea {
     margin: 2px 0 8px;
     color: #7dd3fc;
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-all;
 }
 
 .console pre.output {
     margin: 0 0 14px;
     color: #d7e3ec;
     white-space: pre-wrap;
-    word-break: break-word;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+}
+
+.console.no-wrap .command,
+.console.no-wrap pre.output {
+    display: inline-block;
+    min-width: 100%;
+    padding-right: 10px;
+    white-space: pre;
+    overflow-wrap: normal;
+    word-break: normal;
 }
 
 .hidden {
