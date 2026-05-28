@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var dnsServerInput = document.getElementById("dnsServer");
     var urlInput = document.getElementById("url");
     var insecureInput = document.getElementById("insecure");
+    var noProgressMeterInput = document.getElementById("noProgressMeter");
     var queryParamsList = document.getElementById("queryParamsList");
     var queryParamsBulk = document.getElementById("queryParamsBulk");
     var queryParamsModeToggle = document.getElementById("queryParamsModeToggle");
@@ -56,7 +57,7 @@ document.addEventListener("DOMContentLoaded", function() {
             operation: "curl",
             label: "curl",
             help: "Set a URL, optional headers, TLS behavior, and HTTP method, then hit Run.",
-            fields: ["method", "url", "queryParams", "headers", "insecure"]
+            fields: ["method", "url", "queryParams", "headers", "insecure", "noProgressMeter"]
         },
         {
             operation: "certest",
@@ -115,6 +116,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.querySelector(".field-query-params").classList.toggle("hidden", !hasField(tool, "queryParams"));
         document.querySelector(".field-headers").classList.toggle("hidden", !hasField(tool, "headers"));
         document.querySelector(".field-insecure").classList.toggle("hidden", !hasField(tool, "insecure"));
+        document.querySelector(".field-no-progress-meter").classList.toggle("hidden", !hasField(tool, "noProgressMeter"));
         updateBodyVisibility();
     }
 
@@ -615,6 +617,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (operation === "curl") {
             request.url = url;
             request.insecure = insecureInput.checked;
+            request.noProgressMeter = noProgressMeterInput.checked;
             request.targetMethod = methodInput.value;
             request.headers = collectHeaders(request.targetMethod === "POST");
             if (request.targetMethod === "POST") {
@@ -623,6 +626,18 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         return request;
+    }
+
+    function buildConsoleCommand(operation, ip, port, url) {
+        var commandParts = [operation, ip, port];
+
+        if (operation === "curl" && noProgressMeterInput.checked) {
+            commandParts.push("--no-progress-meter");
+        }
+
+        commandParts.push(url);
+
+        return commandParts.filter(Boolean).join(" ");
     }
 
     function appendCommand(operation, ip, port, url) {
@@ -634,7 +649,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         command.className = "command";
-        command.textContent = "> " + [operation, ip, port, url].filter(Boolean).join(" ");
+        command.textContent = "> " + buildConsoleCommand(operation, ip, port, url);
         output.append(command);
         updateConsoleMaxHeight();
         output.scrollTop = output.scrollHeight;
@@ -762,7 +777,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         var request = buildRequest(operation, ip, port, dnsServer, url);
 
-        console.log([operation, ip, port, url].filter(Boolean).join(" "));
+        console.log(buildConsoleCommand(operation, ip, port, url));
         checkButton.disabled = true;
         appendCommand(operation, ip, port, url);
 

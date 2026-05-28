@@ -38,6 +38,7 @@ import java!com::mulesoft::tool::network::NetworkUtils
 var op = payload.operation default ""
 var headers = (payload.headers default []) as Array<String>
 var insecure = (payload.insecure default false) as Boolean
+var noProgressMeter = (payload.noProgressMeter default false) as Boolean
 var targetMethod = upper(payload.targetMethod default "GET")
 var operations = ["ping", "traceroute", "socket", "dns", "curl", "certest", "ciphertest"]
 fun blank(value) = isEmpty((value default "") as String)
@@ -61,9 +62,9 @@ else
 		case "certest" -> NetworkUtils::certest(payload.host, payload.port)
 		case "ciphertest" -> NetworkUtils::cipherTest(payload.host, payload.port)
 		case "curl" -> if (targetMethod == "POST")
-				NetworkUtils::curl(payload.url, headers, insecure, payload.body default "")
+				NetworkUtils::curl(payload.url, headers, insecure, noProgressMeter, payload.body default "")
 			else
-				NetworkUtils::curl(payload.url, headers, insecure)
+				NetworkUtils::curl(payload.url, headers, insecure, noProgressMeter)
 		else -> errorMessage
 	}]]></ee:set-payload>
 			</ee:message>

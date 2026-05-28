@@ -47,13 +47,19 @@ public class NetworkUtils {
 	}
 
 	public static String curl(String url, String[] headers, Boolean insecure) throws IOException {
+		return curl(url, headers, insecure, false);
+	}
+
+	public static String curl(String url, String[] headers, Boolean insecure, Boolean noProgressMeter) throws IOException {
 		//-i include protocol headers
 		//-L follow redirects
 		//-k insecure
+		//--no-progress-meter suppress progress output
 		//-E cert status
 		List<String> command = new ArrayList<String>();
 		command.add("curl");
-		if(insecure) command.add("-k");
+		if(Boolean.TRUE.equals(noProgressMeter)) command.add("--no-progress-meter");
+		if(Boolean.TRUE.equals(insecure)) command.add("-k");
 		command.add("-i");
 		command.add("-L");
 		command.add(url);
@@ -65,13 +71,19 @@ public class NetworkUtils {
 	}
 
 	public static String curl(String url, String[] headers, Boolean insecure, String body) throws IOException {
+		return curl(url, headers, insecure, false, body);
+	}
+
+	public static String curl(String url, String[] headers, Boolean insecure, Boolean noProgressMeter, String body) throws IOException {
 		//-i include protocol headers
 		//-L follow redirects
 		//-k insecure
+		//--no-progress-meter suppress progress output
 		//-E cert status
 		List<String> command = new ArrayList<String>();
 		command.add("curl");
-		if(insecure) command.add("-k");
+		if(Boolean.TRUE.equals(noProgressMeter)) command.add("--no-progress-meter");
+		if(Boolean.TRUE.equals(insecure)) command.add("-k");
 		command.add("-i");
 		command.add("-L");
 		command.add(url);
