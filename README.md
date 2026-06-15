@@ -50,13 +50,13 @@ The properties below can be set on the app to override the default settings.  Th
 
 - `user`: User name for login.  Defaults to `vpc-tools`
 - `pass`: Password for login.  Defaults to `SomePass`.  This is defined as a secure property.
-- `httpPort`: Sets the listener port for HTTP.  Defaults to `8081`
+- `http.private.port`: Sets the listener port for HTTP. Defaults to `8081` for local execution and is provided by CloudHub when deployed.
 - `httpListener`: The running state of the HTTP endpoint flows.  Defaults to `started`.  Options: `started` or `stopped`.  Stop this to disable HTTP endpoint on CloudHub 1.0 or non-RTF infrastructure.  This doesn't affect RTF or CloudHub 2.0 because only a single HTTP port is used.
 - `ignoreFiles`: Comma-delimited list of browser-requested UI resource files for this app to ignore, such as `favicon.ico`.  Defaults to `favicon.ico`.
 
 ## Network Considerations
 
-- The app uses a single HTTP listener configured by `httpPort`.
+- The app uses a single HTTP listener configured by `http.private.port`.
 - When using CloudHub 2.0 or RTF, enable *Last-Mile Security* in the app's Ingress tab if HTTPS is required at the Mule application.
 - Ping uses ICMP and may not work on CloudHub 2.0 or in environments where ICMP is disabled.
 
