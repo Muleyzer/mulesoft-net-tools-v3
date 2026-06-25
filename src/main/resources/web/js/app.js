@@ -179,6 +179,31 @@ document.addEventListener("DOMContentLoaded", function() {
         setFieldVisibility(currentTool);
     }
 
+    function toolFromHash() {
+        var operation = window.location.hash.replace(/^#/, "");
+        return toolByOperation[operation] ? operation : "ping";
+    }
+
+    function selectToolFromHash() {
+        var operation = toolFromHash();
+
+        if (window.location.hash !== "#" + operation) {
+            window.history.replaceState(null, "", "#" + operation);
+        }
+        selectTool(operation);
+    }
+
+    function setToolHash(operation) {
+        if (!toolByOperation[operation]) {
+            operation = "ping";
+        }
+        if (window.location.hash === "#" + operation) {
+            selectTool(operation);
+            return;
+        }
+        window.location.hash = operation;
+    }
+
     function readPositiveIntegerInput(input) {
         var value = input.value.trim();
         var numberValue;
@@ -857,7 +882,7 @@ document.addEventListener("DOMContentLoaded", function() {
         var tab = event.target.closest(".tool-tab");
 
         if (tab && toolTabs.contains(tab)) {
-            selectTool(tab.dataset.operation);
+            setToolHash(tab.dataset.operation);
         }
     });
 
@@ -924,6 +949,8 @@ document.addEventListener("DOMContentLoaded", function() {
         updateConsoleMaxHeight();
     });
 
+    window.addEventListener("hashchange", selectToolFromHash);
+
     checkButton.addEventListener("click", function() {
         var operation = operationInput.value;
         var ip = ipInput.value;
@@ -971,7 +998,7 @@ document.addEventListener("DOMContentLoaded", function() {
     addQueryParamRow("", "", true, true);
     setHeadersMode("bulk");
     setQueryParamsMode("bulk");
-    selectTool("ping");
+    selectToolFromHash();
     updateConsoleWrapMode();
     updateConsoleMaxHeight();
 });
