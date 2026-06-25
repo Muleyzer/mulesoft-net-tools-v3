@@ -14,7 +14,13 @@ document.addEventListener("DOMContentLoaded", function() {
     var portInput = document.getElementById("port");
     var dnsServerInput = document.getElementById("dnsServer");
     var urlInput = document.getElementById("url");
+    var proxySection = document.querySelector(".proxy-section");
+    var proxyBody = document.getElementById("proxyBody");
+    var proxyToggleButton = document.getElementById("proxyToggle");
+    var proxyEnabledInput = document.getElementById("proxyEnabled");
+    var forwardProxyInput = document.getElementById("forwardProxy");
     var insecureInput = document.getElementById("insecure");
+    var proxyInsecureInput = document.getElementById("proxyInsecure");
     var noProgressMeterInput = document.getElementById("noProgressMeter");
     var queryParamsList = document.getElementById("queryParamsList");
     var queryParamsBulk = document.getElementById("queryParamsBulk");
@@ -56,8 +62,8 @@ document.addEventListener("DOMContentLoaded", function() {
         {
             operation: "curl",
             label: "curl",
-            help: "Set a URL, optional headers, TLS behavior, and HTTP method, then hit Run.",
-            fields: ["method", "url", "queryParams", "headers", "insecure", "noProgressMeter"]
+            help: "Set a URL, optional forward proxy, optional headers, TLS behavior, and HTTP method, then hit Run.",
+            fields: ["method", "url", "forwardProxy", "queryParams", "headers", "insecure", "proxyInsecure", "noProgressMeter"]
         },
         {
             operation: "certest",
@@ -79,6 +85,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var syncingQueryParams = false;
     var queryParamsMode = "rows";
     var headersMode = "rows";
+    var proxyExpanded = false;
 
     function clearNotification() {
         notifications.replaceChildren();
@@ -107,12 +114,19 @@ document.addEventListener("DOMContentLoaded", function() {
         return tool.fields.indexOf(field) >= 0;
     }
 
+    function setProxyExpanded(expanded) {
+        proxyExpanded = expanded;
+        proxyBody.classList.toggle("hidden", !proxyExpanded);
+        proxyToggleButton.setAttribute("aria-expanded", proxyExpanded ? "true" : "false");
+    }
+
     function setFieldVisibility(tool) {
         document.querySelector(".field-host").classList.toggle("hidden", !hasField(tool, "host"));
         document.querySelector(".field-port").classList.toggle("hidden", !hasField(tool, "port"));
         document.querySelector(".field-dns").classList.toggle("hidden", !hasField(tool, "dns"));
         document.querySelector(".field-method").classList.toggle("hidden", !hasField(tool, "method"));
         document.querySelector(".field-url").classList.toggle("hidden", !hasField(tool, "url"));
+        proxySection.classList.toggle("hidden", !hasField(tool, "forwardProxy"));
         document.querySelector(".field-query-params").classList.toggle("hidden", !hasField(tool, "queryParams"));
         document.querySelector(".field-headers").classList.toggle("hidden", !hasField(tool, "headers"));
         document.querySelector(".field-insecure").classList.toggle("hidden", !hasField(tool, "insecure"));
@@ -145,6 +159,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         if (currentTool.operation === "curl") {
             methodInput.value = "GET";
+            setProxyExpanded(false);
         }
 
         setFieldVisibility(currentTool);
@@ -601,6 +616,7 @@ document.addEventListener("DOMContentLoaded", function() {
         var request = {
             operation: operation
         };
+        var forwardProxy;
 
         if (operation !== "curl") {
             request.host = ip;
@@ -617,9 +633,14 @@ document.addEventListener("DOMContentLoaded", function() {
         if (operation === "curl") {
             request.url = url;
             request.insecure = insecureInput.checked;
+            request.proxyInsecure = proxyEnabledInput.checked && proxyInsecureInput.checked;
             request.noProgressMeter = noProgressMeterInput.checked;
             request.targetMethod = methodInput.value;
             request.headers = collectHeaders(request.targetMethod === "POST");
+            forwardProxy = forwardProxyInput.value.trim();
+            if (proxyEnabledInput.checked && forwardProxy) {
+                request.forwardProxy = forwardProxy;
+            }
             if (request.targetMethod === "POST") {
                 request.body = bodyInput.value;
             }
@@ -628,14 +649,80 @@ document.addEventListener("DOMContentLoaded", function() {
         return request;
     }
 
+    function maskProxyCredential(value) {
+        var schemeSeparatorIndex = value.indexOf("://");
+        var authorityStartIndex = schemeSeparatorIndex >= 0 ? schemeSeparatorIndex + 3 : 0;
+        var authorityEndIndex = value.indexOf("/", authorityStartIndex);
+        var authority = authorityEndIndex >= 0 ? value.slice(authorityStartIndex, authorityEndIndex) : value.slice(authorityStartIndex);
+        var atIndex = authority.lastIndexOf("@");
+        var colonIndex;
+        var maskedAuthority;
+
+        if (atIndex < 0) {
+            return value;
+        }
+
+        colonIndex = authority.indexOf(":");
+        if (colonIndex < 0 || colonIndex > atIndex) {
+            return value;
+        }
+
+        maskedAuthority = authority.slice(0, colonIndex + 1) + "****" + authority.slice(atIndex);
+        return value.slice(0, authorityStartIndex) + maskedAuthority + (authorityEndIndex >= 0 ? value.slice(authorityEndIndex) : "");
+    }
+
+    function formatCommandArg(value) {
+        value = String(value);
+        if (!value) {
+            return "''";
+        }
+        if (!/[\s'"\\$`]/.test(value)) {
+            return value;
+        }
+        return "'" + value.replace(/'/g, "'\\''") + "'";
+    }
+
     function buildConsoleCommand(operation, ip, port, url) {
         var commandParts = [operation, ip, port];
+        var proxyEnabled = operation === "curl" && proxyEnabledInput.checked;
+        var forwardProxy = proxyEnabled ? forwardProxyInput.value.trim() : "";
+        var headers;
 
         if (operation === "curl" && noProgressMeterInput.checked) {
             commandParts.push("--no-progress-meter");
         }
 
-        commandParts.push(url);
+        if (operation === "curl" && insecureInput.checked) {
+            commandParts.push("-k");
+        }
+
+        if (proxyEnabled && proxyInsecureInput.checked) {
+            commandParts.push("--proxy-insecure");
+        }
+
+        if (operation === "curl" && forwardProxy) {
+            commandParts.push("-x");
+            commandParts.push(formatCommandArg(maskProxyCredential(forwardProxy)));
+        }
+
+        if (operation === "curl") {
+            commandParts.push("-i");
+            commandParts.push("-L");
+        }
+
+        if (operation === "curl") {
+            commandParts.push(formatCommandArg(url));
+            headers = collectHeaders(methodInput.value === "POST");
+            headers.forEach(function(header) {
+                commandParts.push("-H");
+                commandParts.push(formatCommandArg(header));
+            });
+
+            if (methodInput.value === "POST") {
+                commandParts.push("-d");
+                commandParts.push(formatCommandArg(bodyInput.value));
+            }
+        }
 
         return commandParts.filter(Boolean).join(" ");
     }
@@ -728,6 +815,10 @@ document.addEventListener("DOMContentLoaded", function() {
         if (headersMode === "bulk") {
             syncContentTypeHeader();
         }
+    });
+
+    proxyToggleButton.addEventListener("click", function() {
+        setProxyExpanded(!proxyExpanded);
     });
 
     addQueryParamButton.addEventListener("click", function() {

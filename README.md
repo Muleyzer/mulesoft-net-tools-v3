@@ -4,7 +4,7 @@ The Net Tools API is a deployable Mule app that you can deploy to CloudHub or an
 
 ## v3 Highlights
 
-This version refreshes the web UI with tab-based tool selection, clearer input forms, console-style output, and expanded curl controls for GET/POST requests, query parameters, headers, insecure TLS, and request bodies. Query parameters and headers can be entered row by row or in bulk text mode. It also removes the previous jQuery and Toastr dependencies in favor of plain JavaScript and CSS.
+This version refreshes the web UI with tab-based tool selection, clearer input forms, console-style output, and expanded curl controls for GET/POST requests, query parameters, headers, forward proxy, insecure TLS, and request bodies. Query parameters and headers can be entered row by row or in bulk text mode. It also removes the previous jQuery and Toastr dependencies in favor of plain JavaScript and CSS.
 
 This version also consolidates the application into a single counted Mule flow, reducing the number of license-counted flows from more than 10 to 1 to align with the updated pricing model.
 
@@ -16,10 +16,14 @@ This app uses a single configurable HTTP listener port. HTTPS termination is exp
 - Ping
 - TraceRoute
 - Opening a TCP socket
-- curl GET and POST requests with optional query parameters and headers, including bulk entry
-- Optional insecure TLS for curl requests
+- curl GET and POST requests with optional query parameters, headers, and forward proxy, including bulk entry
+- Optional insecure TLS for curl target requests and HTTPS proxy connections
 - Pull SSL certificates
 - Check supported ciphers for a given SSL/TLS endpoint
+
+The curl forward proxy field accepts curl-compatible proxy URLs such as `http://proxy.example.com:8080`, `socks4://proxy.example.com:1080`, `socks5://proxy.example.com:1080`, and `socks5h://proxy.example.com:1080`. Use `socks5://` for local DNS resolution and `socks5h://` for DNS resolution through the proxy.
+
+Use `Allow insecure TLS` to skip certificate validation for the target URL. Use `Allow insecure proxy TLS` to skip certificate validation when curl connects to an HTTPS forward proxy.
 
 ## Latest build
 

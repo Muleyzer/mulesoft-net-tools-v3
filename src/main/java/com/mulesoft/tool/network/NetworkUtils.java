@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.BufferedWriter;
@@ -46,51 +47,8 @@ public class NetworkUtils {
 		}
 	}
 
-	public static String curl(String url, String[] headers, Boolean insecure) throws IOException {
-		return curl(url, headers, insecure, false);
-	}
-
-	public static String curl(String url, String[] headers, Boolean insecure, Boolean noProgressMeter) throws IOException {
-		//-i include protocol headers
-		//-L follow redirects
-		//-k insecure
-		//--no-progress-meter suppress progress output
-		//-E cert status
-		List<String> command = new ArrayList<String>();
-		command.add("curl");
-		if(Boolean.TRUE.equals(noProgressMeter)) command.add("--no-progress-meter");
-		if(Boolean.TRUE.equals(insecure)) command.add("-k");
-		command.add("-i");
-		command.add("-L");
-		command.add(url);
-		for (String header : headers ) {
-			command.add("-H");
-			command.add(header);
-		}		
-		return execute(new ProcessBuilder(command));
-	}
-
-	public static String curl(String url, String[] headers, Boolean insecure, String body) throws IOException {
-		return curl(url, headers, insecure, false, body);
-	}
-
-	public static String curl(String url, String[] headers, Boolean insecure, Boolean noProgressMeter, String body) throws IOException {
-		//-i include protocol headers
-		//-L follow redirects
-		//-k insecure
-		//--no-progress-meter suppress progress output
-		//-E cert status
-		List<String> command = new ArrayList<String>();
-		command.add("curl");
-		if(Boolean.TRUE.equals(noProgressMeter)) command.add("--no-progress-meter");
-		if(Boolean.TRUE.equals(insecure)) command.add("-k");
-		command.add("-i");
-		command.add("-L");
-		command.add(url);
-		for (String header : headers ) {
-			command.add("-H");
-			command.add(header);
-		}
+	public static String curl(String url, String[] headers, String body, Map<String, Object> options, Map<String, Object> proxy) throws IOException {
+		List<String> command = buildCurlCommand(url, headers, options, proxy);
 		Path tempFile = null;
 		try {
 			if(body != null) {
@@ -105,6 +63,51 @@ public class NetworkUtils {
                 Files.delete(tempFile.toAbsolutePath());
             }
 		}		
+	}
+
+	private static List<String> buildCurlCommand(String url, String[] headers, Map<String, Object> options, Map<String, Object> proxy) {
+		//-i include protocol headers
+		//-L follow redirects
+		//-k insecure
+		//--no-progress-meter suppress progress output
+		//-x use the specified forward proxy
+		//--proxy-insecure allow insecure TLS connections to HTTPS proxies
+		List<String> command = new ArrayList<String>();
+		String forwardProxy = stringOption(proxy, "url");
+		command.add("curl");
+		if(booleanOption(options, "noProgressMeter")) command.add("--no-progress-meter");
+		if(booleanOption(options, "insecure")) command.add("-k");
+		if(booleanOption(proxy, "insecure")) command.add("--proxy-insecure");
+		if(forwardProxy != null && !forwardProxy.trim().isEmpty()) {
+			command.add("-x");
+			command.add(forwardProxy.trim());
+		}
+		command.add("-i");
+		command.add("-L");
+		command.add(url);
+		for (String header : headers ) {
+			command.add("-H");
+			command.add(header);
+		}
+		return command;
+	}
+
+	private static boolean booleanOption(Map<String, Object> options, String key) {
+		if(options == null) {
+			return false;
+		}
+		Object option = options.get(key);
+		if(option instanceof Boolean) {
+			return (Boolean) option;
+		}
+		return option != null && Boolean.valueOf(option.toString());
+	}
+
+	private static String stringOption(Map<String, Object> options, String key) {
+		if(options == null || options.get(key) == null) {
+			return "";
+		}
+		return options.get(key).toString();
 	}
 
 	public static String testConnect(String host, String port) {

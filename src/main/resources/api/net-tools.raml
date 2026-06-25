@@ -36,6 +36,12 @@ types:
       noProgressMeter?:
         description: Suppress curl progress meter output
         type: boolean
+      forwardProxy?:
+        description: curl-compatible forward proxy URL, including http, socks4, socks5, or socks5h
+        type: string
+      proxyInsecure?:
+        description: Allow insecure TLS connections to HTTPS forward proxies for curl
+        type: boolean
       targetMethod?:
         description: HTTP method curl should use
         type: string

@@ -99,6 +99,33 @@
                                     <textarea name="body" placeholder='{ "id"=1, "name"="john" }' title="Body" id="body" rows="5"></textarea>
                                     <div class="memo" id="body_memo">Content-Type is reflected in Headers and sent with POST requests.</div>
                                 </div>
+
+                                <div class="proxy-section full-width">
+                                    <button type="button" class="proxy-section-heading" id="proxyToggle" aria-expanded="false" aria-controls="proxyBody">
+                                        <span>Proxy</span>
+                                        <span class="proxy-chevron" aria-hidden="true"></span>
+                                    </button>
+                                    <div class="proxy-section-body hidden" id="proxyBody">
+                                        <div class="toggle-field field-proxy-enable full-width">
+                                            <span>Enable</span>
+                                            <label class="switch" for="proxyEnabled">
+                                                <input name="proxyEnabled" type="checkbox" title="enable proxy" id="proxyEnabled" role="switch" />
+                                                <span class="switch-track" aria-hidden="true"></span>
+                                            </label>
+                                        </div>
+
+                                        <div class="field field-forward-proxy full-width">
+                                            <label for="forwardProxy">Forward Proxy</label>
+                                            <input name="forwardProxy" placeholder="http://proxy.example.com:8080" type="text" title="Forward Proxy" id="forwardProxy" />
+                                            <div class="memo">Optional curl-compatible proxy URL. Supports http://, socks4://, socks5://, and socks5h://. Include credentials as http://user:password@proxy.example.com:8080 when the proxy requires a user and password. socks5:// resolves DNS locally; socks5h:// resolves DNS through the proxy.</div>
+                                        </div>
+
+                                        <div class="check-field field-proxy-insecure full-width">
+                                            <input name="proxyInsecure" type="checkbox" title="insecure proxy TLS" id="proxyInsecure" />
+                                            <label for="proxyInsecure">Allow insecure proxy TLS</label>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="actions">

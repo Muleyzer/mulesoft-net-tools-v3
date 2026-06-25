@@ -94,11 +94,6 @@ textarea {
     color: #ffffff;
 }
 
-.tool-tab:focus {
-    outline: 2px solid #f0b429;
-    outline-offset: 2px;
-}
-
 .workspace {
     display: grid;
     grid-template-columns: minmax(320px, 440px) minmax(380px, 1fr);
@@ -185,6 +180,53 @@ textarea {
     grid-column: 1 / -1;
 }
 
+.proxy-section {
+    display: grid;
+    gap: 8px;
+    grid-column: 1 / -1;
+    padding: 8px;
+    border: 1px solid #d8e0e6;
+    border-radius: 6px;
+    background: #f8fafb;
+}
+
+.proxy-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 26px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #4b5563;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.proxy-chevron {
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    flex: 0 0 auto;
+    transform: rotate(-45deg);
+    transition: transform 160ms ease;
+}
+
+.proxy-section-heading[aria-expanded="true"] .proxy-chevron {
+    transform: rotate(45deg);
+}
+
+.proxy-section-body {
+    display: grid;
+    gap: 8px;
+}
+
 .field label,
 .check-field label {
     color: #4b5563;
@@ -252,6 +294,74 @@ textarea {
     align-items: center;
     gap: 8px;
     min-height: 34px;
+}
+
+.toggle-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 34px;
+}
+
+.toggle-field > span {
+    color: #4b5563;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.switch {
+    position: relative;
+    display: inline-flex;
+    width: 42px;
+    height: 24px;
+    flex: 0 0 auto;
+    cursor: pointer;
+}
+
+.switch input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.switch-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #a8b4bf;
+    border-radius: 999px;
+    background: #d8e0e6;
+    transition: background 160ms ease, border-color 160ms ease;
+}
+
+.switch-track::after {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(31, 41, 51, 0.22);
+    content: "";
+    transition: transform 160ms ease;
+}
+
+.switch input:checked + .switch-track {
+    border-color: #136f8f;
+    background: #136f8f;
+}
+
+.switch input:checked + .switch-track::after {
+    transform: translateX(18px);
+}
+
+.switch input:focus + .switch-track {
+    outline: 2px solid #cfeaf3;
+    outline-offset: 2px;
 }
 
 .check-field input {
