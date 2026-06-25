@@ -180,6 +180,7 @@ textarea {
     grid-column: 1 / -1;
 }
 
+.options-section,
 .proxy-section {
     display: grid;
     gap: 8px;
@@ -190,6 +191,7 @@ textarea {
     background: #f8fafb;
 }
 
+.options-section-heading,
 .proxy-section-heading {
     display: flex;
     align-items: center;
@@ -208,6 +210,12 @@ textarea {
     text-transform: uppercase;
 }
 
+.options-section-body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
 .proxy-chevron {
     width: 8px;
     height: 8px;
@@ -218,6 +226,7 @@ textarea {
     transition: transform 160ms ease;
 }
 
+.options-section-heading[aria-expanded="true"] .proxy-chevron,
 .proxy-section-heading[aria-expanded="true"] .proxy-chevron {
     transform: rotate(45deg);
 }
@@ -579,6 +588,10 @@ textarea {
     }
 
     .field-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .options-section-body {
         grid-template-columns: 1fr;
     }
 

@@ -70,13 +70,25 @@ public class NetworkUtils {
 		//-L follow redirects
 		//-k insecure
 		//--no-progress-meter suppress progress output
+		//--connect-timeout maximum time allowed for connection
+		//--max-time maximum total time allowed for the request
 		//-x use the specified forward proxy
 		//--proxy-insecure allow insecure TLS connections to HTTPS proxies
 		List<String> command = new ArrayList<String>();
+		String connectTimeout = stringOption(options, "connectTimeout");
 		String forwardProxy = stringOption(proxy, "url");
+		String maxTime = stringOption(options, "maxTime");
 		command.add("curl");
 		if(booleanOption(options, "noProgressMeter")) command.add("--no-progress-meter");
 		if(booleanOption(options, "insecure")) command.add("-k");
+		if(connectTimeout != null && !connectTimeout.trim().isEmpty()) {
+			command.add("--connect-timeout");
+			command.add(connectTimeout.trim());
+		}
+		if(maxTime != null && !maxTime.trim().isEmpty()) {
+			command.add("--max-time");
+			command.add(maxTime.trim());
+		}
 		if(booleanOption(proxy, "insecure")) command.add("--proxy-insecure");
 		if(forwardProxy != null && !forwardProxy.trim().isEmpty()) {
 			command.add("-x");

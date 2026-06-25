@@ -72,16 +72,6 @@
                                     <button type="button" class="secondary-action" id="addHeader">Add Header</button>
                                 </div>
 
-                                <div class="check-field field-insecure full-width">
-                                    <input name="insecure" type="checkbox" title="insecure" id="insecure" />
-                                    <label for="insecure">Allow insecure TLS</label>
-                                </div>
-
-                                <div class="check-field field-no-progress-meter full-width">
-                                    <input name="noProgressMeter" type="checkbox" title="no progress meter" id="noProgressMeter" checked />
-                                    <label for="noProgressMeter">No progress meter</label>
-                                </div>
-
                                 <div class="field field-body full-width">
                                     <div class="curl-field-toolbar">
                                         <div class="field">
@@ -98,6 +88,34 @@
                                     <label for="body">Body</label>
                                     <textarea name="body" placeholder='{ "id"=1, "name"="john" }' title="Body" id="body" rows="5"></textarea>
                                     <div class="memo" id="body_memo">Content-Type is reflected in Headers and sent with POST requests.</div>
+                                </div>
+
+                                <div class="options-section full-width">
+                                    <button type="button" class="options-section-heading" id="optionsToggle" aria-expanded="false" aria-controls="optionsBody">
+                                        <span>Options</span>
+                                        <span class="proxy-chevron" aria-hidden="true"></span>
+                                    </button>
+                                    <div class="options-section-body hidden" id="optionsBody">
+                                        <div class="check-field field-insecure full-width">
+                                            <input name="insecure" type="checkbox" title="insecure" id="insecure" />
+                                            <label for="insecure">Allow insecure TLS</label>
+                                        </div>
+
+                                        <div class="check-field field-no-progress-meter full-width">
+                                            <input name="noProgressMeter" type="checkbox" title="no progress meter" id="noProgressMeter" checked />
+                                            <label for="noProgressMeter">No progress meter</label>
+                                        </div>
+
+                                        <div class="field field-connect-timeout">
+                                            <label for="connectTimeout">Connect timeout (seconds)</label>
+                                            <input name="connectTimeout" value="10" type="number" min="1" step="1" title="Connect timeout" id="connectTimeout" />
+                                        </div>
+
+                                        <div class="field field-max-time">
+                                            <label for="maxTime">Max timeout (seconds)</label>
+                                            <input name="maxTime" value="30" type="number" min="1" step="1" title="Max timeout" id="maxTime" />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="proxy-section full-width">

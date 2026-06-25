@@ -14,6 +14,9 @@ document.addEventListener("DOMContentLoaded", function() {
     var portInput = document.getElementById("port");
     var dnsServerInput = document.getElementById("dnsServer");
     var urlInput = document.getElementById("url");
+    var optionsSection = document.querySelector(".options-section");
+    var optionsBody = document.getElementById("optionsBody");
+    var optionsToggleButton = document.getElementById("optionsToggle");
     var proxySection = document.querySelector(".proxy-section");
     var proxyBody = document.getElementById("proxyBody");
     var proxyToggleButton = document.getElementById("proxyToggle");
@@ -22,6 +25,8 @@ document.addEventListener("DOMContentLoaded", function() {
     var insecureInput = document.getElementById("insecure");
     var proxyInsecureInput = document.getElementById("proxyInsecure");
     var noProgressMeterInput = document.getElementById("noProgressMeter");
+    var connectTimeoutInput = document.getElementById("connectTimeout");
+    var maxTimeInput = document.getElementById("maxTime");
     var queryParamsList = document.getElementById("queryParamsList");
     var queryParamsBulk = document.getElementById("queryParamsBulk");
     var queryParamsModeToggle = document.getElementById("queryParamsModeToggle");
@@ -63,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function() {
             operation: "curl",
             label: "curl",
             help: "Set a URL, optional forward proxy, optional headers, TLS behavior, and HTTP method, then hit Run.",
-            fields: ["method", "url", "forwardProxy", "queryParams", "headers", "insecure", "proxyInsecure", "noProgressMeter"]
+            fields: ["method", "url", "options", "forwardProxy", "queryParams", "headers", "insecure", "proxyInsecure", "noProgressMeter"]
         },
         {
             operation: "certest",
@@ -85,6 +90,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var syncingQueryParams = false;
     var queryParamsMode = "rows";
     var headersMode = "rows";
+    var optionsExpanded = false;
     var proxyExpanded = false;
 
     function clearNotification() {
@@ -120,12 +126,19 @@ document.addEventListener("DOMContentLoaded", function() {
         proxyToggleButton.setAttribute("aria-expanded", proxyExpanded ? "true" : "false");
     }
 
+    function setOptionsExpanded(expanded) {
+        optionsExpanded = expanded;
+        optionsBody.classList.toggle("hidden", !optionsExpanded);
+        optionsToggleButton.setAttribute("aria-expanded", optionsExpanded ? "true" : "false");
+    }
+
     function setFieldVisibility(tool) {
         document.querySelector(".field-host").classList.toggle("hidden", !hasField(tool, "host"));
         document.querySelector(".field-port").classList.toggle("hidden", !hasField(tool, "port"));
         document.querySelector(".field-dns").classList.toggle("hidden", !hasField(tool, "dns"));
         document.querySelector(".field-method").classList.toggle("hidden", !hasField(tool, "method"));
         document.querySelector(".field-url").classList.toggle("hidden", !hasField(tool, "url"));
+        optionsSection.classList.toggle("hidden", !hasField(tool, "options"));
         proxySection.classList.toggle("hidden", !hasField(tool, "forwardProxy"));
         document.querySelector(".field-query-params").classList.toggle("hidden", !hasField(tool, "queryParams"));
         document.querySelector(".field-headers").classList.toggle("hidden", !hasField(tool, "headers"));
@@ -159,10 +172,30 @@ document.addEventListener("DOMContentLoaded", function() {
 
         if (currentTool.operation === "curl") {
             methodInput.value = "GET";
+            setOptionsExpanded(false);
             setProxyExpanded(false);
         }
 
         setFieldVisibility(currentTool);
+    }
+
+    function readPositiveIntegerInput(input) {
+        var value = input.value.trim();
+        var numberValue;
+
+        if (!value) {
+            return null;
+        }
+
+        numberValue = Number(value);
+        if (!Number.isFinite(numberValue) || numberValue <= 0 || !Number.isInteger(numberValue)) {
+            return null;
+        }
+        return numberValue;
+    }
+
+    function hasInvalidPositiveIntegerInput(input) {
+        return input.value.trim() !== "" && readPositiveIntegerInput(input) === null;
     }
 
     function validateRequest(operation, ip, port, url) {
@@ -181,6 +214,18 @@ document.addEventListener("DOMContentLoaded", function() {
         if (operation === "curl" && !url) {
             notifyError("Missing url", "Invalid Arguments");
             console.error("Missing url!");
+            return false;
+        }
+
+        if (operation === "curl" && hasInvalidPositiveIntegerInput(connectTimeoutInput)) {
+            notifyError("Connect timeout must be a positive integer", "Invalid Arguments");
+            console.error("Invalid connect timeout!");
+            return false;
+        }
+
+        if (operation === "curl" && hasInvalidPositiveIntegerInput(maxTimeInput)) {
+            notifyError("Max time must be a positive integer", "Invalid Arguments");
+            console.error("Invalid max time!");
             return false;
         }
 
@@ -617,6 +662,8 @@ document.addEventListener("DOMContentLoaded", function() {
             operation: operation
         };
         var forwardProxy;
+        var connectTimeout;
+        var maxTime;
 
         if (operation !== "curl") {
             request.host = ip;
@@ -637,6 +684,14 @@ document.addEventListener("DOMContentLoaded", function() {
             request.noProgressMeter = noProgressMeterInput.checked;
             request.targetMethod = methodInput.value;
             request.headers = collectHeaders(request.targetMethod === "POST");
+            connectTimeout = readPositiveIntegerInput(connectTimeoutInput);
+            maxTime = readPositiveIntegerInput(maxTimeInput);
+            if (connectTimeout !== null) {
+                request.connectTimeout = connectTimeout;
+            }
+            if (maxTime !== null) {
+                request.maxTime = maxTime;
+            }
             forwardProxy = forwardProxyInput.value.trim();
             if (proxyEnabledInput.checked && forwardProxy) {
                 request.forwardProxy = forwardProxy;
@@ -686,6 +741,8 @@ document.addEventListener("DOMContentLoaded", function() {
         var commandParts = [operation, ip, port];
         var proxyEnabled = operation === "curl" && proxyEnabledInput.checked;
         var forwardProxy = proxyEnabled ? forwardProxyInput.value.trim() : "";
+        var connectTimeout = operation === "curl" ? connectTimeoutInput.value.trim() : "";
+        var maxTime = operation === "curl" ? maxTimeInput.value.trim() : "";
         var headers;
 
         if (operation === "curl" && noProgressMeterInput.checked) {
@@ -694,6 +751,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
         if (operation === "curl" && insecureInput.checked) {
             commandParts.push("-k");
+        }
+
+        if (operation === "curl" && connectTimeout) {
+            commandParts.push("--connect-timeout");
+            commandParts.push(formatCommandArg(connectTimeout));
+        }
+
+        if (operation === "curl" && maxTime) {
+            commandParts.push("--max-time");
+            commandParts.push(formatCommandArg(maxTime));
         }
 
         if (proxyEnabled && proxyInsecureInput.checked) {
@@ -815,6 +882,10 @@ document.addEventListener("DOMContentLoaded", function() {
         if (headersMode === "bulk") {
             syncContentTypeHeader();
         }
+    });
+
+    optionsToggleButton.addEventListener("click", function() {
+        setOptionsExpanded(!optionsExpanded);
     });
 
     proxyToggleButton.addEventListener("click", function() {

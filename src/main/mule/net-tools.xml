@@ -39,11 +39,15 @@ var op = payload.operation default ""
 var headers = (payload.headers default []) as Array<String>
 var insecure = (payload.insecure default false) as Boolean
 var noProgressMeter = (payload.noProgressMeter default false) as Boolean
+var connectTimeout = payload.connectTimeout default null
+var maxTime = payload.maxTime default null
 var forwardProxy = (payload.forwardProxy default "") as String
 var proxyInsecure = (payload.proxyInsecure default false) as Boolean
 var curlOptions = {
 	insecure: insecure,
-	noProgressMeter: noProgressMeter
+	noProgressMeter: noProgressMeter,
+	connectTimeout: connectTimeout,
+	maxTime: maxTime
 }
 var curlProxy = {
 	url: forwardProxy,

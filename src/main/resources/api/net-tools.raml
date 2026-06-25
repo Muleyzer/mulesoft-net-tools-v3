@@ -36,6 +36,12 @@ types:
       noProgressMeter?:
         description: Suppress curl progress meter output
         type: boolean
+      connectTimeout?:
+        description: Maximum time in seconds curl may spend connecting
+        type: number
+      maxTime?:
+        description: Maximum total time in seconds curl may spend on the request
+        type: number
       forwardProxy?:
         description: curl-compatible forward proxy URL, including http, socks4, socks5, or socks5h
         type: string
