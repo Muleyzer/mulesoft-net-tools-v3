@@ -74,3 +74,4 @@ The properties below can be set on the app to override the default settings.  Th
 
 - Jorge Luis García Pérez - Mule 3 version creator and maintainer 
 - Facundo Lopez Kaufmann - Mule 4 upgrade
+- Takahiro Yamamoto - Version 3 upgrade
